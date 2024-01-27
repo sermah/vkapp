@@ -26,12 +26,12 @@ import com.sermah.vkapp.ui.utils.displayCount
 fun VKPost_Button(
     icon: ImageVector,
     count: Int = 0,
-    toggleColor: Color? = null,
+    toggle: Boolean = false,
     contentDescription: String? = null,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    val content: @Composable() (RowScope.() -> Unit) = {
+    val content: @Composable (RowScope.() -> Unit) = {
         Icon(
             icon,
             contentDescription = contentDescription,
@@ -49,7 +49,7 @@ fun VKPost_Button(
         end = 14.dp,
         bottom = 4.dp
     )
-    if (toggleColor != null)
+    if (toggle)
         Button(
             onClick = onClick,
             modifier = modifier,

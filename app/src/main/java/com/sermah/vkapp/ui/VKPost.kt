@@ -1,5 +1,7 @@
 package com.sermah.vkapp.ui
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,12 +13,13 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +38,8 @@ fun VKPost(
     onLike: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var expanded by remember(post.id) { mutableStateOf(false) }
+
     Card(
         modifier = modifier,
         elevation = CardDefaults.cardElevation(4.dp)
@@ -51,16 +56,20 @@ fun VKPost(
                 timePosted = post.timePosted,
                 modifier = modifier.fillMaxWidth()
             )
-            Text(
-                text = post.text.trim(),
-                style = AppType.postText,
-                modifier = modifier.fillMaxWidth(),
+            VKPost_Text(
+                text = post.text,
+                isExpanded = expanded,
+                maxLines = 10,
+                onShowClick = {
+                    expanded = !expanded
+                }
             )
             VKPost_Footer(
                 likes = post.likes,
                 reposts = post.reposts,
                 views = post.views,
-                onLike = onLike
+                isLiked = post.isLiked,
+                onLike = onLike,
             )
         }
 
@@ -76,15 +85,17 @@ private fun VKPost_Header(
     timePosted: Int,
     modifier: Modifier = Modifier,
 ) {
+    val photoSize = 56.dp
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.padding(bottom = 4.dp)
     ) {
         GlideImage(
             model = if (authorPicUrl != "") authorPicUrl else null,
             contentDescription = null,
             modifier = Modifier
                 .padding(end = 16.dp)
-                .size(64.dp, 64.dp)
+                .size(photoSize)
         ) {
             it.fitCenter().circleCrop()
         }
@@ -109,17 +120,19 @@ fun VKPost_Footer(
     likes: Int,
     reposts: Int,
     views: Int,
+    isLiked: Boolean,
     onLike: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
-        modifier = modifier.padding(top = 10.dp)
+        modifier = modifier.padding(top = 6.dp)
     ) {
         VKPost_Button(
             icon = Icons.Outlined.FavoriteBorder,
             count = likes,
+            toggle = isLiked,
             contentDescription = "Like",
             onClick = onLike
         )
@@ -142,11 +155,42 @@ fun VKPost_Footer(
     }
 }
 
+@Composable
+fun VKPost_Text(
+    text: String,
+    isExpanded: Boolean,
+    maxLines: Int,
+    modifier: Modifier = Modifier,
+    onShowClick: () -> Unit,
+) {
+    var shouldBeCropped by remember { mutableStateOf(false) }
+
+    Text(
+        text = text.trim(),
+        color = MaterialTheme.colorScheme.onPrimaryContainer,
+        style = AppType.postText,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = if (!isExpanded) maxLines else Int.MAX_VALUE,
+        modifier = modifier.animateContentSize(),
+        onTextLayout = {
+            shouldBeCropped = it.hasVisualOverflow || it.lineCount > maxLines
+        }
+    )
+    if (shouldBeCropped)
+        Text(
+            text = if (!isExpanded) "Show more..." else "Show less...",
+            style = AppType.postText,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable(onClick = onShowClick),
+        )
+}
+
 @Preview(widthDp = 360)
 @Composable
 private fun VKPostPreview() {
     VKPost(
         post = Post(
+            id = 0,
             authorName = "John Doe",
             authorId = 0,
             authorPicUrl = "https://sun9-38.userapi.com/impf/t0pCKKPdkY85H-g0Pmz_Mv09DKWmHrZQvOSkEg/SmmY-d5b_t0.jpg?size=766x819&quality=95&sign=cd40fdecd596f67fb6e3decc26d33f82&type=album",
@@ -157,6 +201,7 @@ private fun VKPostPreview() {
             likes = 69,
             reposts = 10,
             views = 200,
+            isLiked = false,
             attachments = emptyList(),
         ),
         onLike = {}
@@ -168,6 +213,7 @@ private fun VKPostPreview() {
 private fun VKPostPreview_BigStrings() {
     VKPost(
         post = Post(
+            id = 1,
             authorName = "My favourite jokes group about jokes",
             authorId = 0,
             authorPicUrl = "https://sun9-38.userapi.com/impf/t0pCKKPdkY85H-g0Pmz_Mv09DKWmHrZQvOSkEg/SmmY-d5b_t0.jpg?size=766x819&quality=95&sign=cd40fdecd596f67fb6e3decc26d33f82&type=album",
@@ -178,6 +224,7 @@ private fun VKPostPreview_BigStrings() {
             likes = 69_500_000,
             reposts = 10_200,
             views = 2_100_000_000,
+            isLiked = true,
             attachments = emptyList(),
         ),
         onLike = {}

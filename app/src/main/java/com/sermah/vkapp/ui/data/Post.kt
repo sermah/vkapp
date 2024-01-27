@@ -7,6 +7,7 @@ import com.vk.sdk.api.users.dto.UsersUserFullDto
 import com.vk.sdk.api.wall.dto.WallWallItemDto
 
 data class Post(
+    val id: Int,
     val authorName: String,
     val authorId: Long,
     val authorPicUrl: String,
@@ -15,10 +16,12 @@ data class Post(
     val likes: Int,
     val reposts: Int,
     val views: Int,
+    val isLiked: Boolean,
     val attachments: Collection<PostAttachment>
 )
 
 fun NewsfeedNewsfeedItemDto.NewsfeedItemWallpostDto.toUIPost() = Post(
+    id = this.id ?: -1,
     authorName = this.ownerId.toString(),
     authorId = this.ownerId?.value ?: -1L,
     authorPicUrl = "",
@@ -27,6 +30,7 @@ fun NewsfeedNewsfeedItemDto.NewsfeedItemWallpostDto.toUIPost() = Post(
     likes = this.likes?.count ?: 0,
     reposts = this.reposts?.count ?: 0,
     views = this.views?.count ?: 0,
+    isLiked = this.likes?.userLikes?.value == 1,
     attachments = listOf(),
 )
 
@@ -37,6 +41,7 @@ fun WallWallItemDto.WallWallpostFullDto.toUIPost(
     val user = users.find { it.id == this.ownerId }
     val group = if (user == null) groups.find { it.id == this.ownerId } else null
     return Post(
+        id = this.id ?: -1,
         authorName = user?.displayName ?: group?.name ?: "Unknown",
         authorId = this.ownerId?.value ?: -1L,
         authorPicUrl = user?.photo100 ?: group?.photo100 ?: "",
@@ -45,6 +50,7 @@ fun WallWallItemDto.WallWallpostFullDto.toUIPost(
         likes = this.likes?.count ?: 0,
         reposts = this.reposts?.count ?: 0,
         views = this.views?.count ?: 0,
+        isLiked = this.likes?.userLikes?.value == 1,
         attachments = listOf(),
     )
 }
