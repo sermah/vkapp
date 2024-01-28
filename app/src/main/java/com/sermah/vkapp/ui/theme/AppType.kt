@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 
 private val commonPostText = Typography.bodyLarge.copy(
@@ -15,10 +16,17 @@ val AppType = AppTypography(
     postAuthorName = Typography.titleMedium,
     postTime = Typography.bodyMedium,
     postText = commonPostText,
-    postMore = commonPostText,
+    postMore = commonPostText.copy(
+        textDecoration = TextDecoration.Underline,
+    ),
     postLink = commonPostText,
     postButtons = Typography.bodyMedium,
     postViews = Typography.bodySmall,
+
+    profileName = Typography.headlineMedium,
+    profileTime = Typography.bodyMedium,
+    profileStatus = commonPostText,
+    profileReason = Typography.bodyMedium,
 )
 
 @Immutable
@@ -30,4 +38,9 @@ class AppTypography(
     val postLink: TextStyle,
     val postButtons: TextStyle,
     val postViews: TextStyle,
+
+    val profileName: TextStyle,
+    val profileTime: TextStyle,
+    val profileStatus: TextStyle,
+    val profileReason: TextStyle,
 )

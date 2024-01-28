@@ -1,4 +1,4 @@
-package com.sermah.vkapp.ui
+package com.sermah.vkapp.ui.component
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,8 +17,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 @Composable
-fun VKWall(
-    posts: SnapshotStateList<Post>,
+fun Wall(
+    posts: List<Post>,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -40,7 +40,7 @@ fun VKWall(
         }
     ) {
         items(posts) { post ->
-            VKPost(
+            Post(
                 post = post,
                 onLike = {},
                 modifier = Modifier.padding(vertical = 8.dp)

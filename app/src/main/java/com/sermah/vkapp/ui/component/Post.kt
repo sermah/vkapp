@@ -1,4 +1,4 @@
-package com.sermah.vkapp.ui
+package com.sermah.vkapp.ui.component
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -33,7 +33,7 @@ import com.sermah.vkapp.ui.utils.displayCount
 import com.sermah.vkapp.ui.utils.displayTime
 
 @Composable
-fun VKPost(
+fun Post(
     post: Post,
     onLike: () -> Unit,
     modifier: Modifier = Modifier,
@@ -49,14 +49,14 @@ fun VKPost(
                 .padding(12.dp)
                 .fillMaxWidth()
         ) {
-            VKPost_Header(
+            Post_Header(
                 authorName = post.authorName,
                 authorId = post.authorId,
                 authorPicUrl = post.authorPicUrl,
                 timePosted = post.timePosted,
                 modifier = modifier.fillMaxWidth()
             )
-            VKPost_Text(
+            Post_Text(
                 text = post.text,
                 isExpanded = expanded,
                 maxLines = 10,
@@ -64,7 +64,7 @@ fun VKPost(
                     expanded = !expanded
                 }
             )
-            VKPost_Footer(
+            Post_Footer(
                 likes = post.likes,
                 reposts = post.reposts,
                 views = post.views,
@@ -78,7 +78,7 @@ fun VKPost(
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-private fun VKPost_Header(
+private fun Post_Header(
     authorName: String,
     authorId: Long,
     authorPicUrl: String,
@@ -116,7 +116,7 @@ private fun VKPost_Header(
 }
 
 @Composable
-fun VKPost_Footer(
+fun Post_Footer(
     likes: Int,
     reposts: Int,
     views: Int,
@@ -156,7 +156,7 @@ fun VKPost_Footer(
 }
 
 @Composable
-fun VKPost_Text(
+fun Post_Text(
     text: String,
     isExpanded: Boolean,
     maxLines: Int,
@@ -178,8 +178,8 @@ fun VKPost_Text(
     )
     if (shouldBeCropped)
         Text(
-            text = if (!isExpanded) "Show more..." else "Show less...",
-            style = AppType.postText,
+            text = if (!isExpanded) "Show more…" else "Show less…",
+            style = AppType.postMore,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable(onClick = onShowClick),
         )
@@ -187,8 +187,8 @@ fun VKPost_Text(
 
 @Preview(widthDp = 360)
 @Composable
-private fun VKPostPreview() {
-    VKPost(
+private fun PostPreview() {
+    Post(
         post = Post(
             id = 0,
             authorName = "John Doe",
@@ -210,8 +210,8 @@ private fun VKPostPreview() {
 
 @Preview(widthDp = 360)
 @Composable
-private fun VKPostPreview_BigStrings() {
-    VKPost(
+private fun PostPreview_BigStrings() {
+    Post(
         post = Post(
             id = 1,
             authorName = "My favourite jokes group about jokes",
