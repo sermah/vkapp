@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Send
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,13 +38,13 @@ fun Post(
 ) {
     var expanded by remember(post.id) { mutableStateOf(false) }
 
-    Card(
-        modifier = modifier,
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
+//    Card(
+//        modifier = modifier,
+////        elevation = CardDefaults.cardElevation(4.dp)
+//    ) {
         Column(
-            Modifier
-                .padding(12.dp)
+            modifier
+                .padding(vertical = 12.dp)
                 .fillMaxWidth()
         ) {
             Post_Header(
@@ -54,7 +52,7 @@ fun Post(
                 authorId = post.authorId,
                 authorPicUrl = post.authorPicUrl,
                 timePosted = post.timePosted,
-                modifier = modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             Post_Text(
                 text = post.text,
@@ -62,7 +60,8 @@ fun Post(
                 maxLines = 10,
                 onShowClick = {
                     expanded = !expanded
-                }
+                },
+                modifier = Modifier.fillMaxWidth().padding(end = 4.dp),
             )
             Post_Footer(
                 likes = post.likes,
@@ -70,10 +69,11 @@ fun Post(
                 views = post.views,
                 isLiked = post.isLiked,
                 onLike = onLike,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
-    }
+//    }
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -147,10 +147,11 @@ fun Post_Footer(
             modifier = Modifier.fillMaxWidth()
         ) {
             // TODO Eye Icon
-            Text(
-                text = "${displayCount(views)} views",
-                style = AppType.postViews,
-            )
+            if (views > 0)
+                Text(
+                    text = "${displayCount(views)} views",
+                    style = AppType.postViews,
+                )
         }
     }
 }

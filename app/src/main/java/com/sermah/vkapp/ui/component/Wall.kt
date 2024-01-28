@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sermah.vkapp.ui.data.Post
@@ -39,12 +39,16 @@ fun Wall(
             }
         }
     ) {
-        items(posts) { post ->
+        items(
+            items = posts,
+            key = { post -> post.id },
+        ) { post ->
             Post(
                 post = post,
                 onLike = {},
                 modifier = Modifier.padding(vertical = 8.dp)
             )
+            Divider()
         }
     }
 }

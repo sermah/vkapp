@@ -1,20 +1,20 @@
 package com.sermah.vkapp.ui.component
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -27,16 +27,29 @@ import com.sermah.vkapp.ui.utils.displayTime
 
 @Composable
 fun UserProfile(
-    profile: UserProfile,
     modifier: Modifier = Modifier,
+    profile: UserProfile,
+    cardColor: Color = MaterialTheme.colorScheme.background,
+    onCardColor: Color = MaterialTheme.colorScheme.onBackground,
 ) {
-    val photoSize = 72.dp
+    val photoSize = 96.dp
+    val cornerSize = 0.dp
 
     Card(
-        shape = RectangleShape,
-        modifier = modifier,
+        shape = RoundedCornerShape(
+            topStart = 0.dp,
+            topEnd = 0.dp,
+            bottomStart = cornerSize,
+            bottomEnd = cornerSize,
+        ),
+        modifier = modifier
     ) {
-        UserProfile_Head(profile, photoSize, Modifier.fillMaxWidth().padding(16.dp))
+        UserProfile_Head(
+            profile, photoSize,
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
         UserProfile_Info(profile, Modifier.fillMaxWidth())
     }
 }
@@ -48,33 +61,44 @@ private fun UserProfile_Head(
     photoSize: Dp,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(bottom = 4.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.padding(top = 4.dp, bottom = 4.dp)
     ) {
         GlideImage(
             model = if (profile.photoUrl != "") profile.photoUrl else null,
             contentDescription = null,
             modifier = Modifier
-                .padding(end = 16.dp)
                 .size(photoSize)
+                .padding(bottom = 4.dp)
         ) {
             it.fitCenter().circleCrop()
         }
-        Column {
+        Text(
+            text = profile.displayName,
+            style = AppType.profileName,
+            textAlign = TextAlign.Center,
+        )
+        if (profile is UserProfile.Open) {
             Text(
-                text = profile.displayName,
-                style = AppType.profileName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                text = when (profile.online) {
+                    is Online.Now -> "online"
+                    is Online.Was ->
+                        if (profile.online.time > 0)
+                            "was online ${displayTime(profile.online.time)}"
+                        else "offline"
+                },
+                style = AppType.profileTime,
+                textAlign = TextAlign.Center,
             )
-            if (profile is UserProfile.Open) {
+            if (profile.status.isNotBlank()) {
                 Text(
-                    text = when (profile.online) {
-                        is Online.Now -> "Online"
-                        is Online.Was -> "was online ${displayTime(profile.online.time)}"
-                    },
-                    style = AppType.profileTime,
+                    text = profile.status.trim(),
+                    style = AppType.profileStatus,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
         }
@@ -90,7 +114,7 @@ private fun UserProfile_Info(
         if (profile !is UserProfile.Open) {
             val message: String = when (profile) {
                 is UserProfile.Blacklisted -> "User blacklisted you."
-                is UserProfile.Deactivated -> "Account was ${profile.reason}."
+                is UserProfile.Deactivated -> "Account was ${profile.reason.toLower()}."
                 is UserProfile.Closed -> "This account is closed."
                 else -> ""
             }
@@ -104,4 +128,36 @@ private fun UserProfile_Info(
             )
         }
     }
+}
+
+@Preview(widthDp = 360)
+@Composable
+fun UserProfilePreview() {
+    UserProfile(
+        profile = UserProfile.Open(
+            id = 1,
+            firstName = "John",
+            lastName = "Doe",
+            photoUrl = "",
+            screenName = "peedee",
+            online = Online.Now(0),
+            status = "Hello world!",
+        )
+    )
+}
+
+@Preview(widthDp = 360)
+@Composable
+fun UserProfilePreview_LongStrings() {
+    UserProfile(
+        profile = UserProfile.Open(
+            id = 1,
+            firstName = "Johnathan Badminton",
+            lastName = "Goodminton Senior",
+            photoUrl = "",
+            screenName = "peedeeaf_file_not_found_hello",
+            online = Online.Was(420, 0),
+            status = "Hello world! I am Johnathan Goodminton Senior and I like my life and I like my kids and I like my wife.",
+        )
+    )
 }

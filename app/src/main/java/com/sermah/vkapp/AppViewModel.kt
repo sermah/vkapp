@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class MainActivityViewModel: ViewModel() {
+class AppViewModel : ViewModel() {
     private lateinit var loginLauncher: ActivityResultLauncher<Collection<VKScope>>
 
     private val newsfeedService = NewsfeedService()
@@ -72,12 +72,20 @@ class MainActivityViewModel: ViewModel() {
     }
 
     init {
+        // Flows
         profile.onEach {
             _posts.value = listOf()
             loadWallPosts()
         }.launchIn(viewModelScope)
         location.onEach { _posts.value = listOf() }.launchIn(viewModelScope)
-        openProfile(1)
+
+        // VK
+        registerTokenExpired()
+
+        // Begin
+        loadProfile(1)
+        // banned 282075916
+        // closed 289800033
     }
 
     fun openVKLogin() {
@@ -94,7 +102,7 @@ class MainActivityViewModel: ViewModel() {
         loginLauncher = VK.login(activity, loginCallback)
     }
 
-    fun openProfile(id: Long) {
+    private fun loadProfile(id: Long) {
         viewModelScope.launch {
             val request = usersService.usersGet(
                 userIds = listOf(UserId(id)),
@@ -107,7 +115,7 @@ class MainActivityViewModel: ViewModel() {
                     UsersFieldsDto.STATUS,
                 )
             )
-            VK.execute(request, object: VKApiCallback<List<UsersUserFullDto>> {
+            VK.execute(request, object : VKApiCallback<List<UsersUserFullDto>> {
                 override fun success(result: List<UsersUserFullDto>) {
                     Log.d("MainActivityViewModel", "Received ${result.size} user profiles.")
 
@@ -134,7 +142,9 @@ class MainActivityViewModel: ViewModel() {
         })
     }
 
-    fun updateUserId() { _userId.value = VK.getUserId().value }
+    fun updateUserId() {
+        _userId.value = VK.getUserId().value
+    }
 
     fun loadMorePosts() {
         loadWallPosts()
@@ -151,7 +161,7 @@ class MainActivityViewModel: ViewModel() {
                 offset = state.offset,
                 filter = "all",
             )
-            VK.execute(request, object: VKApiCallback<WallGetExtendedResponseDto> {
+            VK.execute(request, object : VKApiCallback<WallGetExtendedResponseDto> {
                 override fun success(result: WallGetExtendedResponseDto) {
                     Log.d("MainActivityViewModel", "Loaded $count posts")
                     Log.d("MainActivityViewModel", "Items = ${result.items}")

@@ -1,6 +1,5 @@
 package com.sermah.vkapp.ui.state
 
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.sermah.vkapp.ui.data.Post
 import com.sermah.vkapp.ui.data.UserProfile
 
@@ -17,4 +16,11 @@ sealed interface UiState {
         val posts: List<Post>,
         val offset: Int,
     ): UiState
+
+    fun toTitle(): String =
+        when(this) {
+            is LoggedOut -> "Login"
+            is Profile -> profile?.screenName ?: "Profile"
+            is Feed -> "Feed"
+        }
 }

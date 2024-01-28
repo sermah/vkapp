@@ -1,9 +1,6 @@
 package com.sermah.vkapp.ui.theme
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
@@ -23,7 +20,7 @@ val AppType = AppTypography(
     postButtons = Typography.bodyMedium,
     postViews = Typography.bodySmall,
 
-    profileName = Typography.headlineMedium,
+    profileName = Typography.headlineSmall,
     profileTime = Typography.bodyMedium,
     profileStatus = commonPostText,
     profileReason = Typography.bodyMedium,
