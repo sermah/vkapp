@@ -1,5 +1,6 @@
 package com.sermah.vkapp.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -22,15 +23,20 @@ fun VKApp(viewModel: AppViewModel) = VKAppTheme {
                 ScreenUserProfile(
                     profile = (uiState as UiState.Profile).profile,
                     posts = (uiState as UiState.Profile).posts,
-                    onLoadMorePosts = { viewModel.loadMorePosts() },
-                    modifier = Modifier.padding(padding),
+                    onLoadMorePosts = viewModel::loadMorePosts,
+                    onLikePost = viewModel::likePost,
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
                 )
             }
 
             is UiState.LoggedOut -> {
                 ScreenLogin(
                     onLoginClick = { viewModel.openVKLogin() },
-                    modifier = Modifier.padding(padding),
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
                 )
             }
 

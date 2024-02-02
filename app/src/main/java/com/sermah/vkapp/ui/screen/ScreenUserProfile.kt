@@ -35,6 +35,7 @@ fun ScreenUserProfile(
     profile: UserProfile?,
     posts: List<Post>,
     onLoadMorePosts: () -> Unit,
+    onLikePost: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val headerHeightMin = 96.dp
@@ -88,6 +89,7 @@ fun ScreenUserProfile(
             Wall(
                 posts = posts,
                 onLoadMore = onLoadMorePosts,
+                onLikePost = onLikePost,
             )
         } else {
             Box(
@@ -132,5 +134,6 @@ private fun ScreenUserProfilePreview() {
             )
         ),
         onLoadMorePosts = {},
+        onLikePost = {},
     )
 }

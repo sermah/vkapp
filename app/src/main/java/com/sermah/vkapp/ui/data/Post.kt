@@ -1,10 +1,14 @@
 package com.sermah.vkapp.ui.data
 
+import android.util.Log
 import com.sermah.vkapp.ui.utils.displayName
+import com.vk.dto.common.id.UserId
 import com.vk.sdk.api.groups.dto.GroupsGroupFullDto
 import com.vk.sdk.api.newsfeed.dto.NewsfeedNewsfeedItemDto
+import com.vk.sdk.api.photos.dto.PhotosPhotoSizesTypeDto
 import com.vk.sdk.api.users.dto.UsersUserFullDto
 import com.vk.sdk.api.wall.dto.WallWallItemDto
+import com.vk.sdk.api.wall.dto.WallWallpostAttachmentTypeDto
 
 data class Post(
     val id: Int,
@@ -35,11 +39,11 @@ fun NewsfeedNewsfeedItemDto.NewsfeedItemWallpostDto.toUIPost() = Post(
 )
 
 fun WallWallItemDto.WallWallpostFullDto.toUIPost(
-    users: Collection<UsersUserFullDto>,
-    groups: Collection<GroupsGroupFullDto>,
+    users: Map<UserId, UsersUserFullDto>,
+    groups: Map<UserId, GroupsGroupFullDto>,
 ): Post {
-    val user = users.find { it.id == this.ownerId }
-    val group = if (user == null) groups.find { it.id == this.ownerId } else null
+    val user = users[this.ownerId ?: 0L]
+    val group = if (user == null) groups[this.ownerId ?: 0L] else null
     return Post(
         id = this.id ?: -1,
         authorName = user?.displayName ?: group?.name ?: "Unknown",
@@ -51,6 +55,37 @@ fun WallWallItemDto.WallWallpostFullDto.toUIPost(
         reposts = this.reposts?.count ?: 0,
         views = this.views?.count ?: 0,
         isLiked = this.likes?.userLikes?.value == 1,
-        attachments = listOf(),
+        attachments = this.attachments?.let { list ->
+            list.map { attachment ->
+                when (attachment.type) {
+                    WallWallpostAttachmentTypeDto.PHOTO -> (attachment.photo).let { photo ->
+                        PostAttachment.Photo(
+                            id = photo?.id ?: -1,
+                            albumId = photo?.albumId ?: -1,
+                            ownerId = photo?.ownerId?.value ?: -1L,
+                            ownerName = users[photo?.ownerId]?.displayName ?: "Unknown owner",
+                            userId = photo?.userId?.value ?: -1L,
+                            userName = users[photo?.userId]?.displayName ?: "Unknown user",
+                            text = photo?.text ?: "",
+                            url = photo?.sizes
+                                ?.find { it.type == PhotosPhotoSizesTypeDto.Y }
+                                ?.url ?: "",
+                        )
+                    }
+
+                    WallWallpostAttachmentTypeDto.VIDEO -> (attachment.video).let { video ->
+                        PostAttachment.Video(
+                            id = video?.id ?: -1,
+                            title = "",
+                            author = users[video?.ownerId]?.displayName ?: "Unknown owner",
+                        )
+                    }
+
+                    else -> PostAttachment.Unknown(attachment.type.value).also {
+                        Log.d("data/Post", "Unknown attach type: ${it.type}")
+                    }
+                }
+            }
+        } ?: emptyList(),
     )
 }

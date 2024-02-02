@@ -20,10 +20,11 @@ import kotlinx.coroutines.flow.onEach
 fun Wall(
     posts: List<Post>,
     onLoadMore: () -> Unit,
+    onLikePost: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = modifier,
         state = rememberLazyListState().also { state ->
             LaunchedEffect(key1 = state) {
                 snapshotFlow { state.layoutInfo }
@@ -45,8 +46,9 @@ fun Wall(
         ) { post ->
             Post(
                 post = post,
-                onLike = {},
-                modifier = Modifier.padding(vertical = 8.dp)
+                onLike = { onLikePost(post.id) },
+                modifier = Modifier.padding(vertical = 8.dp),
+                innerPadding = 16.dp,
             )
             Divider()
         }

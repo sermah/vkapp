@@ -1,13 +1,22 @@
 package com.sermah.vkapp.ui.component
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Send
@@ -20,12 +29,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.sermah.vkapp.ui.data.Post
+import com.sermah.vkapp.ui.data.PostAttachment
 import com.sermah.vkapp.ui.theme.AppType
 import com.sermah.vkapp.ui.utils.displayCount
 import com.sermah.vkapp.ui.utils.displayTime
@@ -34,6 +47,7 @@ import com.sermah.vkapp.ui.utils.displayTime
 fun Post(
     post: Post,
     onLike: () -> Unit,
+    innerPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember(post.id) { mutableStateOf(false) }
@@ -44,7 +58,7 @@ fun Post(
 //    ) {
         Column(
             modifier
-                .padding(vertical = 12.dp)
+                .padding(vertical = 8.dp)
                 .fillMaxWidth()
         ) {
             Post_Header(
@@ -52,7 +66,9 @@ fun Post(
                 authorId = post.authorId,
                 authorPicUrl = post.authorPicUrl,
                 timePosted = post.timePosted,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = innerPadding),
             )
             Post_Text(
                 text = post.text,
@@ -61,7 +77,17 @@ fun Post(
                 onShowClick = {
                     expanded = !expanded
                 },
-                modifier = Modifier.fillMaxWidth().padding(end = 4.dp),
+                modifier = Modifier
+                    .padding(top = 6.dp, bottom = 4.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = innerPadding),
+            )
+            Post_Visuals(
+                attachments = post.attachments,
+                modifier = Modifier
+                    .height(360.dp)
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             )
             Post_Footer(
                 likes = post.likes,
@@ -69,7 +95,9 @@ fun Post(
                 views = post.views,
                 isLiked = post.isLiked,
                 onLike = onLike,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = innerPadding),
             )
         }
 
@@ -166,24 +194,88 @@ fun Post_Text(
 ) {
     var shouldBeCropped by remember { mutableStateOf(false) }
 
-    Text(
-        text = text.trim(),
-        color = MaterialTheme.colorScheme.onPrimaryContainer,
-        style = AppType.postText,
-        overflow = TextOverflow.Ellipsis,
-        maxLines = if (!isExpanded) maxLines else Int.MAX_VALUE,
-        modifier = modifier.animateContentSize(),
-        onTextLayout = {
-            shouldBeCropped = it.hasVisualOverflow || it.lineCount > maxLines
+    Column(modifier) {
+        if (text.isNotEmpty()) {
+            Text(
+                text = text.trim(),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                style = AppType.postText,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = if (!isExpanded) maxLines else Int.MAX_VALUE,
+                modifier = Modifier.animateContentSize(),
+                onTextLayout = {
+                    shouldBeCropped = it.hasVisualOverflow || it.lineCount > maxLines
+                }
+            )
+            if (shouldBeCropped)
+                Text(
+                    text = if (!isExpanded) "Show more…" else "Show less…",
+                    style = AppType.postMore,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .clickable(onClick = onShowClick),
+                )
         }
-    )
-    if (shouldBeCropped)
-        Text(
-            text = if (!isExpanded) "Show more…" else "Show less…",
-            style = AppType.postMore,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.clickable(onClick = onShowClick),
-        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
+@Composable
+fun Post_Visuals(
+    attachments: Collection<PostAttachment>,
+    modifier: Modifier,
+) {
+    val visuals = attachments.filter {
+        it is PostAttachment.Photo
+//            || it is PostAttachment.Video
+    }
+    if (visuals.isNotEmpty()) {
+        val bgColor = MaterialTheme.colorScheme.secondaryContainer
+        val pagerState = rememberPagerState(0, 0f) { visuals.size }
+
+        Box(
+            contentAlignment = Alignment.TopEnd,
+            modifier = modifier,
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+//                    .clip(RoundedCornerShape(8.dp))
+                    .background(bgColor)
+            ) { idx ->
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxHeight()
+                ) {
+                    when (val visual = visuals[idx]) {
+                        is PostAttachment.Photo -> {
+                            GlideImage(
+                                model = if (visual.url != "") visual.url else null,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                            ) {
+                                it.fitCenter()
+                            }
+                        }
+
+                        else -> {}
+                    }
+                }
+            }
+
+            if (pagerState.pageCount > 1)
+                Text(
+                    text = "${pagerState.currentPage + 1}/${pagerState.pageCount}",
+                    color = Color.White,
+                    modifier = Modifier
+                        .padding(top = 12.dp, end = 12.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(Color(0, 0, 0, 128))
+                        .padding(vertical = 6.dp, horizontal = 8.dp)
+                )
+        }
+    }
 }
 
 @Preview(widthDp = 360)
@@ -205,7 +297,8 @@ private fun PostPreview() {
             isLiked = false,
             attachments = emptyList(),
         ),
-        onLike = {}
+        onLike = {},
+        innerPadding = 8.dp,
     )
 }
 
@@ -228,6 +321,53 @@ private fun PostPreview_BigStrings() {
             isLiked = true,
             attachments = emptyList(),
         ),
-        onLike = {}
+        onLike = {},
+        innerPadding = 8.dp,
     )
 }
+
+@Preview(widthDp = 360, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun PostPreview_Attachment() {
+    Post(
+        post = Post(
+            id = 1,
+            authorName = "My favourite jokes",
+            authorId = 0,
+            authorPicUrl = "https://sun9-38.userapi.com/impf/t0pCKKPdkY85H-g0Pmz_Mv09DKWmHrZQvOSkEg/SmmY-d5b_t0.jpg?size=766x819&quality=95&sign=cd40fdecd596f67fb6e3decc26d33f82&type=album",
+            timePosted = 420,
+            text = "Ullam illo dolores sed. Incidunt voluptates suscipit at quos et ut vitae. Eveniet tenetur qui sunt facilis error. Corrupti ad magni esse consectetur sed possimus odit.\n" +
+                "\n" +
+                "Illo et impedit earum molestias praesentium tempora voluptatem sequi. Omnis voluptatibus mollitia et non et quibusdam. Et placeat facilis sed. Consequatur nulla mollitia repellendus accusantium. Beatae veritatis sit quis.\n",
+            likes = 69_500_000,
+            reposts = 10_200,
+            views = 2_100_000_000,
+            isLiked = true,
+            attachments = listOf(
+                PostAttachment.Photo(
+                    id = 0,
+                    albumId = 0,
+                    ownerId = 1L,
+                    ownerName = "",
+                    userId = 0,
+                    userName = "",
+                    text = "",
+                    url = ""
+                ),
+                PostAttachment.Photo(
+                    id = 0,
+                    albumId = 0,
+                    ownerId = 1L,
+                    ownerName = "",
+                    userId = 0,
+                    userName = "",
+                    text = "",
+                    url = ""
+                )
+            ),
+        ),
+        onLike = {},
+        innerPadding = 8.dp,
+    )
+}
+
