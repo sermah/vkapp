@@ -10,6 +10,8 @@ sealed interface PostAttachment {
         val userName: String,
         val text: String,
         val url: String,
+        val w: Int,
+        val h: Int,
     ) : PostAttachment
 
     data class Music(val title: String, val author: String, val id: Int) : PostAttachment

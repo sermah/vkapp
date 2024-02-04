@@ -59,6 +59,8 @@ fun WallWallItemDto.WallWallpostFullDto.toUIPost(
             list.map { attachment ->
                 when (attachment.type) {
                     WallWallpostAttachmentTypeDto.PHOTO -> (attachment.photo).let { photo ->
+                        val size = photo?.sizes
+                            ?.find { it.type == PhotosPhotoSizesTypeDto.Y }
                         PostAttachment.Photo(
                             id = photo?.id ?: -1,
                             albumId = photo?.albumId ?: -1,
@@ -67,9 +69,9 @@ fun WallWallItemDto.WallWallpostFullDto.toUIPost(
                             userId = photo?.userId?.value ?: -1L,
                             userName = users[photo?.userId]?.displayName ?: "Unknown user",
                             text = photo?.text ?: "",
-                            url = photo?.sizes
-                                ?.find { it.type == PhotosPhotoSizesTypeDto.Y }
-                                ?.url ?: "",
+                            url = size?.url ?: "",
+                            w = size?.width ?: 0,
+                            h = size?.height ?: 0,
                         )
                     }
 

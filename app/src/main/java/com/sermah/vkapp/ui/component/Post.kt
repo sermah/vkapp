@@ -8,10 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
@@ -85,7 +84,6 @@ fun Post(
             Post_Visuals(
                 attachments = post.attachments,
                 modifier = Modifier
-                    .height(360.dp)
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
@@ -234,6 +232,15 @@ fun Post_Visuals(
         val bgColor = MaterialTheme.colorScheme.secondaryContainer
         val pagerState = rememberPagerState(0, 0f) { visuals.size }
 
+        // aspect ratio is used to calculate visuals height which takes the biggest
+        // ratio between 1:1 and 2:1 (w:h)
+
+        val aspectRatio = visuals.minOf {
+            if (it is PostAttachment.Photo && it.w > 0)
+                it.w.toFloat() / it.h.toFloat()
+            else Float.MAX_VALUE
+        }.coerceIn(1f /* 1:1 */, 2f /* 2:1 */)
+
         Box(
             contentAlignment = Alignment.TopEnd,
             modifier = modifier,
@@ -241,12 +248,12 @@ fun Post_Visuals(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
-//                    .clip(RoundedCornerShape(8.dp))
                     .background(bgColor)
+                    .aspectRatio(aspectRatio, true)
             ) { idx ->
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxHeight()
+//                    modifier = Modifier.fillMaxHeight()
                 ) {
                     when (val visual = visuals[idx]) {
                         is PostAttachment.Photo -> {
@@ -352,7 +359,9 @@ private fun PostPreview_Attachment() {
                     userId = 0,
                     userName = "",
                     text = "",
-                    url = ""
+                    url = "",
+                    100,
+                    50
                 ),
                 PostAttachment.Photo(
                     id = 0,
@@ -362,7 +371,9 @@ private fun PostPreview_Attachment() {
                     userId = 0,
                     userName = "",
                     text = "",
-                    url = ""
+                    url = "",
+                    50,
+                    100
                 )
             ),
         ),
