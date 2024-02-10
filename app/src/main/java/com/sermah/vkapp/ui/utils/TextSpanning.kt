@@ -14,16 +14,17 @@ private fun Char.isAllowedInShortname() =
         || this == '_'
 
 private val LINK_STARTS = listOf(
-    "id", "public", "event",
+    "id", "public", "event", "club",
     // TODO https://vk.com/wall-2158488_881014
 )
 
 private fun String.isLegitShortname(): Boolean {
     LINK_STARTS.forEach { start ->
         if (startsWith(start))
-            return start.slice(start.length until this.length).let {
-                it.isNotEmpty() && it.isDigitsOnly()
-            }
+            return start.length < this.length &&
+                slice(start.length until this.length).let {
+                    it.isNotEmpty() && it.isDigitsOnly()
+                }
     }
 
     // https://vk.com/faq18038
@@ -45,17 +46,18 @@ private fun String.isLegitShortname(): Boolean {
 
 }
 
+// TODO: Replace with regex
 fun String.spanWith(
-    urls: Boolean = true, // https://...
-    atLink: Boolean = true, // @user
-    atLinkExtended: Boolean = true, // @user (text)
-    squareBrackets: Boolean = true, // [link|text]
-    hashTags: Boolean = true, //
+//    urls: Boolean = true, // https://...
+//    atLink: Boolean = true, // @user
+//    atLinkExtended: Boolean = true, // @user (text)
+//    squareBrackets: Boolean = true, // [link|text]
+//    hashTags: Boolean = true, //
 ) = buildSpannedString {
     val str = this@spanWith
     val lines = str.split('\n')
 
-    for (line in lines) {
+    lines.forEachIndexed { il, line ->
         val tokens = StringTokenizer(line, " [|]()@#", true)
             .toList().map { it as String }
         var idx = 0
@@ -77,7 +79,7 @@ fun String.spanWith(
                     setSpan(
                         PostSpan.HashTag(rawLink.substring(0 until linkUntil)),
                         spanFrom,
-                        spanFrom + linkUntil,
+                        spanFrom + linkUntil + 1,
                         SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                 } else if (tok == "@") {
@@ -110,7 +112,7 @@ fun String.spanWith(
                                 setSpan(
                                     PostSpan.InternalLink(rawLink),
                                     spanFrom,
-                                    length - 1,
+                                    length,
                                     SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
                                 )
                             }
@@ -128,7 +130,7 @@ fun String.spanWith(
                         setSpan(
                             PostSpan.InternalLink(rawLink.substring(0 until linkUntil)),
                             spanFrom,
-                            spanFrom + linkUntil,
+                            spanFrom + linkUntil + 1,
                             SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                     }
@@ -158,7 +160,7 @@ fun String.spanWith(
                         setSpan(
                             PostSpan.InternalLink(link),
                             spanFrom,
-                            length - 1,
+                            length,
                             SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
 
@@ -171,97 +173,8 @@ fun String.spanWith(
             }
             idx++
         }
-        // \s|[@#\[\]()]
+        if (il < lines.size - 1) append("\n")
     }
-
-//    val str = this@spanWith
-//    var idx = 0
-//    var span = SpanType.TEXT
-//    var spanStart = 0
-//    var spanEnd = 0
-//    var link = ""
-//
-//    while (idx <= str.length) {
-//        val c = if (idx < str.length) str[idx] else '\n'
-//
-//        when (span) {
-//            SpanType.TEXT -> {
-//                var newSpan = false
-//                when (c) {
-//                    '[' -> {
-//                        span = SpanType.SQ_LINK
-//                        newSpan = true
-//                    }
-//                    '@' -> {
-//                        span = SpanType.AT_LINK
-//                        newSpan = true
-//                    }
-//                    '#' -> {
-//                        span = SpanType.HASHTAG
-//                        newSpan = true
-//                    }
-//                }
-//
-//                if (newSpan) {
-//                    append(str.slice(spanStart until idx))
-//                    spanStart = idx
-//                }
-//            }
-//            SpanType.HASHTAG -> {
-//                if (!c.isLetterOrDigit() && c != '_') {
-//                    append(str.slice(spanStart until idx))
-//                    if (idx > spanStart + 1)
-//                        setSpan(
-//                            PostSpan.HashTag,
-//                            spanStart, idx - 1,
-//                            SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
-//
-//                    span = SpanType.TEXT
-//                    spanStart = idx
-//                }
-//            }
-//            SpanType.AT_LINK -> {
-//                if (!c.isLetterOrDigit() && c != '_') {
-//                    spanEnd = idx
-//                    while (idx < str.length && str[idx] == ' ') idx++
-//                    if (idx == str.length || str[idx] != '(') {
-//                        append(str.slice(spanStart until spanEnd))
-//                        if (spanEnd > spanStart + 1)
-//                            setSpan(
-//                                PostSpan.InternalLink(str.substring(spanStart + 1 until spanEnd)),
-//                                spanStart, spanEnd,
-//                                SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
-//                    } else {
-//                        link = str.substring(spanStart + 1 until spanEnd)
-//                        span = SpanType.AT_TEXT
-//                        spanStart = idx
-//                    }
-//                }
-//            }
-//            SpanType.AT_TEXT -> {
-//                if (c == ')') {
-//                    append(str.slice(spanStart until idx))
-//                    if (spanEnd > spanStart + 1)
-//                        setSpan(
-//                            PostSpan.InternalLink(str.substring(spanStart + 1 until spanEnd)),
-//                            spanStart, spanEnd,
-//                            SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
-//                }
-//            }
-//        }
-//        idx++
-//    }
-}
-
-
-private enum class SpanType {
-    TEXT,
-    URL, // https://site.com and site.com links
-    HASHTAG, // #tags
-    SQ_LINK, // [id1000|John Doe] - first part
-    SQ_TEXT, // [id1000|John Doe] - last part
-    AT_LINK, // @john_doe (John Doe) - first part
-    AT_TEXT, // @john_doe (John Doe) - last part
 }
 
 sealed interface PostSpan {

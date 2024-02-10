@@ -76,10 +76,25 @@ fun WallWallItemDto.WallWallpostFullDto.toUIPost(
                     }
 
                     WallWallpostAttachmentTypeDto.VIDEO -> (attachment.video).let { video ->
+                        val image = video?.image
+                            ?.sortedBy { it.width }
+                            ?.let {
+                                it.firstOrNull { it.width > 1000 } ?: it.last()
+                            }
+
                         PostAttachment.Video(
                             id = video?.id ?: -1,
-                            title = "",
-                            author = users[video?.ownerId]?.displayName ?: "Unknown owner",
+                            ownerId = video?.ownerId?.value ?: -1L,
+                            ownerName = users[video?.ownerId]?.displayName ?: "Unknown owner",
+                            userId = video?.userId?.value ?: -1L,
+                            userName = users[video?.userId]?.displayName ?: "Unknown user",
+                            title = video?.title ?: "Untitled",
+                            description = video?.description ?: "",
+                            imageUrl = image?.url ?: "",
+                            imageW = image?.width ?: 0,
+                            imageH = image?.height ?: 0,
+                            date = video?.date ?: 0,
+                            player = video?.player ?: "",
                         )
                     }
 

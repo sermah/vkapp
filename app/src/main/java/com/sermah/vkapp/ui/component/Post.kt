@@ -1,5 +1,6 @@
 package com.sermah.vkapp.ui.component
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -15,10 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Send
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -39,8 +47,10 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.sermah.vkapp.ui.data.Post
 import com.sermah.vkapp.ui.data.PostAttachment
 import com.sermah.vkapp.ui.theme.AppType
+import com.sermah.vkapp.ui.utils.PostSpan
 import com.sermah.vkapp.ui.utils.displayCount
 import com.sermah.vkapp.ui.utils.displayTime
+import com.sermah.vkapp.ui.utils.spanWith
 
 @Composable
 fun Post(
@@ -157,6 +167,7 @@ fun Post_Footer(
     ) {
         VKPost_Button(
             icon = Icons.Outlined.FavoriteBorder,
+            iconToggled = Icons.Filled.Favorite,
             count = likes,
             toggle = isLiked,
             contentDescription = "Like",
@@ -191,18 +202,43 @@ fun Post_Text(
     onShowClick: () -> Unit,
 ) {
     var shouldBeCropped by remember { mutableStateOf(false) }
+    val spannedText = remember { text.spanWith() }
+    val annotatedText = remember {
+        buildAnnotatedString {
+            var i = 0
+            while (i < spannedText.length) {
+                val next = spannedText
+                    .nextSpanTransition(i, spannedText.length, PostSpan::class.java)
+                val spans = spannedText.getSpans(i, next, PostSpan::class.java)
+                if (spans.isNotEmpty()) withStyle(AppType.postLink.toSpanStyle()) {
+                    append(spannedText.slice(i until next))
+                } else {
+                    append(spannedText.slice(i until next))
+                }
+                i = next
+            }
+        }
+    }
 
     Column(modifier) {
         if (text.isNotEmpty()) {
-            Text(
-                text = text.trim(),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                style = AppType.postText,
+            ClickableText(
+                text = annotatedText,
+                style = AppType.postText.copy(
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = if (!isExpanded) maxLines else Int.MAX_VALUE,
                 modifier = Modifier.animateContentSize(),
                 onTextLayout = {
                     shouldBeCropped = it.hasVisualOverflow || it.lineCount > maxLines
+                },
+                onClick = { offset ->
+                    val spans = spannedText
+                        .getSpans(offset, offset + 1, PostSpan::class.java)
+                    if (spans.isNotEmpty()) {
+                        Log.d("component/Post", "Clicked on ${spans.toList()}")
+                    }
                 }
             )
             if (shouldBeCropped)
@@ -226,7 +262,7 @@ fun Post_Visuals(
 ) {
     val visuals = attachments.filter {
         it is PostAttachment.Photo
-//            || it is PostAttachment.Video
+            || it is PostAttachment.Video
     }
     if (visuals.isNotEmpty()) {
         val bgColor = MaterialTheme.colorScheme.secondaryContainer
@@ -238,6 +274,8 @@ fun Post_Visuals(
         val aspectRatio = visuals.minOf {
             if (it is PostAttachment.Photo && it.w > 0)
                 it.w.toFloat() / it.h.toFloat()
+            else if (it is PostAttachment.Video && it.imageW > 0)
+                it.imageW.toFloat() / it.imageH.toFloat()
             else Float.MAX_VALUE
         }.coerceIn(1f /* 1:1 */, 2f /* 2:1 */)
 
@@ -263,6 +301,30 @@ fun Post_Visuals(
                                 modifier = Modifier.fillMaxSize(),
                             ) {
                                 it.fitCenter()
+                            }
+                        }
+
+                        is PostAttachment.Video -> {
+                            GlideImage(
+                                model = if (visual.imageUrl != "") visual.imageUrl else null,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                            ) {
+                                it.fitCenter()
+                            }
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0f, 0f, 0f, 0.4f))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.PlayArrow,
+                                    contentDescription = "Play Video",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(48.dp),
+                                )
                             }
                         }
 

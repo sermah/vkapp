@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -38,41 +39,52 @@ fun ScreenUserProfile(
     onLikePost: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val headerHeightMin = 96.dp
+    val headerHeightMin = 64.dp
     var headerHeightMaxPx by remember { mutableFloatStateOf(0F) }
     val headerHeightMinPx = with(LocalDensity.current) { headerHeightMin.roundToPx().toFloat() }
     var headerHeightPx by remember { mutableFloatStateOf(headerHeightMaxPx) }
     val headerHeight = with(LocalDensity.current) { headerHeightPx.toDp() }
 
+    val scrollDispatcher = remember { NestedScrollDispatcher() }
+
     Column(
         modifier
             .nestedScroll(
-            object : NestedScrollConnection {
-                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                    val delta = available.y.coerceIn(
-                        headerHeightMinPx - headerHeightPx, 0F,
-                    )
-                    headerHeightPx += delta
-                    return Offset(0F, delta)
-                }
+                object : NestedScrollConnection {
+                    override fun onPreScroll(
+                        available: Offset,
+                        source: NestedScrollSource
+                    ): Offset {
+                        val delta = available.y.coerceIn(
+                            headerHeightMinPx - headerHeightPx, 0F,
+                        )
+                        headerHeightPx += delta
+                        return Offset(0F, delta)
+                    }
 
-                override fun onPostScroll(
-                    consumed: Offset,
-                    available: Offset,
-                    source: NestedScrollSource
-                ): Offset {
-                    val delta = available.y.coerceIn(
-                        0F, headerHeightMaxPx - headerHeightPx,
-                    )
-                    headerHeightPx += delta
-                    return Offset(0F, delta)
-                }
-            }
-        )
+                    override fun onPostScroll(
+                        consumed: Offset,
+                        available: Offset,
+                        source: NestedScrollSource
+                    ): Offset {
+                        val delta = available.y.coerceIn(
+                            0F, headerHeightMaxPx - headerHeightPx,
+                        )
+                        headerHeightPx += delta
+                        return Offset(0F, delta)
+                    }
+                },
+                scrollDispatcher
+            )
     ) {
         if (profile != null) {
             UserProfile(
                 profile = profile,
+                shrinkFactor = ((headerHeightPx - headerHeightMinPx) /
+                    (headerHeightMaxPx - headerHeightMinPx))
+                    .coerceIn(0f, 1f)
+                    .let { it * it },
+                onShortNameClick = {},
                 modifier = Modifier
                     .fillMaxWidth()
                     .onGloballyPositioned {

@@ -7,6 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+/** Tests for [TestSpanning] */
 @RunWith(RobolectricTestRunner::class)
 class TextSpanningTest {
 
@@ -16,7 +17,7 @@ class TextSpanningTest {
         setSpan(
             PostSpan.HashTag(tag),
             idx,
-            idx + tag.length,
+            idx + tag.length + 1,
             SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
         )
     }
@@ -30,7 +31,7 @@ class TextSpanningTest {
         setSpan(
             PostSpan.InternalLink(link),
             idx,
-            idx + link.length,
+            idx + link.length + 1,
             SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
         )
     }
@@ -44,7 +45,7 @@ class TextSpanningTest {
         setSpan(
             PostSpan.InternalLink(link),
             idx,
-            idx + text.length - 1,
+            idx + text.length,
             SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE
         )
     }

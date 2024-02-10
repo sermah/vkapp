@@ -1,9 +1,11 @@
 package com.sermah.vkapp.ui.component
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -11,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,8 +32,10 @@ import com.sermah.vkapp.ui.utils.displayTime
 fun UserProfile(
     modifier: Modifier = Modifier,
     profile: UserProfile,
+    shrinkFactor: Float = 1f, // 0 = shrinked, 1 = opened
     cardColor: Color = MaterialTheme.colorScheme.background,
     onCardColor: Color = MaterialTheme.colorScheme.onBackground,
+    onShortNameClick: () -> Unit = {},
 ) {
     val photoSize = 96.dp
     val cornerSize = 0.dp
@@ -42,15 +47,27 @@ fun UserProfile(
             bottomStart = cornerSize,
             bottomEnd = cornerSize,
         ),
-        modifier = modifier
+        modifier = modifier,
     ) {
-        UserProfile_Head(
-            profile, photoSize,
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
-        UserProfile_Info(profile, Modifier.fillMaxWidth())
+        Box {
+            Column(modifier = Modifier.alpha(shrinkFactor)) {
+                UserProfile_Head(
+                    profile, photoSize,
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+                UserProfile_Info(profile, Modifier.fillMaxWidth())
+            }
+            Text(
+                modifier = Modifier
+                    .alpha(1 - shrinkFactor)
+                    .padding(16.dp)
+                    .clickable { onShortNameClick() },
+                text = profile.screenName,
+                style = AppType.appBarTitle,
+            )
+        }
     }
 }
 
@@ -61,15 +78,16 @@ private fun UserProfile_Head(
     photoSize: Dp,
     modifier: Modifier = Modifier,
 ) {
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(top = 4.dp, bottom = 4.dp)
+        modifier = modifier.padding(top = 4.dp, bottom = 4.dp),
     ) {
         GlideImage(
             model = if (profile.photoUrl != "") profile.photoUrl else null,
             contentDescription = null,
             modifier = Modifier
-                .size(photoSize)
+                .requiredSize(photoSize)
                 .padding(bottom = 4.dp)
         ) {
             it.fitCenter().circleCrop()

@@ -2,6 +2,7 @@ package com.sermah.vkapp.ui.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 
@@ -16,7 +17,9 @@ val AppType = AppTypography(
     postMore = commonPostText.copy(
         textDecoration = TextDecoration.Underline,
     ),
-    postLink = commonPostText,
+    postLink = commonPostText.copy(
+        textDecoration = TextDecoration.Underline,
+    ),
     postButtons = Typography.bodyMedium,
     postViews = Typography.bodySmall,
 
@@ -24,6 +27,10 @@ val AppType = AppTypography(
     profileTime = Typography.bodyMedium,
     profileStatus = commonPostText,
     profileReason = Typography.bodyMedium,
+
+    appBarTitle = Typography.headlineSmall.copy(
+        fontWeight = FontWeight.SemiBold,
+    )
 )
 
 @Immutable
@@ -40,4 +47,6 @@ class AppTypography(
     val profileTime: TextStyle,
     val profileStatus: TextStyle,
     val profileReason: TextStyle,
+
+    val appBarTitle: TextStyle,
 )
