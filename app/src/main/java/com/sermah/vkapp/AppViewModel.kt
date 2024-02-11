@@ -6,6 +6,9 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sermah.vkapp.repo.vk.model.UserIdExt
+import com.sermah.vkapp.repo.vk.model.userIdOf
+import com.sermah.vkapp.repo.vk.service.usersGetExt
 import com.sermah.vkapp.ui.data.Post
 import com.sermah.vkapp.ui.data.UserProfile
 import com.sermah.vkapp.ui.data.toUIPost
@@ -47,7 +50,7 @@ class AppViewModel : ViewModel() {
     private val _userId = MutableStateFlow(VK.getUserId().value)
     val userId: StateFlow<Long> get() = _userId
 
-    private val _location = MutableStateFlow(Location.PROFILE)
+    private val _location = MutableStateFlow(Location.FRIENDS)
     val location: StateFlow<Location> get() = _location
 
     private val _profile = MutableStateFlow<UserProfile?>(null)
@@ -63,6 +66,7 @@ class AppViewModel : ViewModel() {
         return@combine when (mLocation) {
             Location.PROFILE -> UiState.Profile(mProfile, mPosts, mPosts.size)
             Location.FEED -> UiState.Feed(mPosts, mPosts.size)
+            Location.FRIENDS -> UiState.Friends
         }
     }
         .stateIn(
@@ -72,7 +76,7 @@ class AppViewModel : ViewModel() {
         )
 
     enum class Location {
-        PROFILE, FEED,
+        PROFILE, FEED, FRIENDS
     }
 
     init {
@@ -87,7 +91,7 @@ class AppViewModel : ViewModel() {
         registerTokenExpired()
 
         // Begin
-        loadProfile(1)
+        openFriends()
         // banned 282075916
         // closed 289800033
     }
@@ -106,10 +110,18 @@ class AppViewModel : ViewModel() {
         loginLauncher = VK.login(activity, loginCallback)
     }
 
-    private fun loadProfile(id: Long) {
+    fun visitProfile(id: Long) {
+        loadProfile(userIdOf(id))
+    }
+
+    fun visitProfile(name: String) {
+        loadProfile(userIdOf(name))
+    }
+
+    private fun loadProfile(id: UserIdExt) {
         viewModelScope.launch {
-            val request = usersService.usersGet(
-                userIds = listOf(UserId(id)),
+            val request = usersService.usersGetExt(
+                userIds = listOf(id),
                 fields = listOf(
                     UsersFieldsDto.BLACKLISTED,
                     UsersFieldsDto.PHOTO_200,
@@ -125,6 +137,7 @@ class AppViewModel : ViewModel() {
 
                     if (result.size == 1) {
                         _profile.value = result[0].toUserProfile()
+                        _location.value = Location.PROFILE
                         Log.d("AppViewModel", "Loaded profile id: ${profile.value!!.id}")
                     } else {
                         Log.e("AppViewModel", "Failed to load profile. Wrong answer size.")
@@ -132,7 +145,10 @@ class AppViewModel : ViewModel() {
                 }
 
                 override fun fail(error: Exception) {
-                    Log.e("AppViewModel", "Failed to load profile: ${error.message}")
+                    Log.e(
+                        "AppViewModel", "Failed to load profile: ${error.message}\n" +
+                            error.stackTraceToString()
+                    )
                 }
             })
         }
@@ -194,7 +210,7 @@ class AppViewModel : ViewModel() {
                         "Login succeeded for user ID: ${result.token.userId}"
                     )
 
-                    loadProfile(1)
+                    openFriends()
                 }
 
                 is VKAuthenticationResult.Failed -> {
@@ -207,6 +223,10 @@ class AppViewModel : ViewModel() {
 
             updateUserId()
         }
+
+    fun openFriends() {
+        _location.value = Location.FRIENDS
+    }
 
     fun likePost(postId: Int) {
         val post = _posts.value.find { it.id == postId } ?: run {
@@ -279,37 +299,4 @@ class AppViewModel : ViewModel() {
             }
         })
     }
-
-    //    private fun loadFeedPosts(scope: CoroutineScope) {
-//        scope.launch {
-//            val request = newsfeedService.newsfeedGet(
-//                filters = listOf(NewsfeedNewsfeedItemTypeDto.POST),
-//                returnBanned = false,
-//                count = 30,
-//                startFrom = startFrom,
-//            )
-//            VK.execute(request, object: VKApiCallback<NewsfeedGenericResponseDto> {
-//                override fun success(result: NewsfeedGenericResponseDto) {
-//                    Log.d("AppViewModel", "Loaded posts")
-//                    val posts = result.items
-//                        .filterIsInstance<NewsfeedNewsfeedItemDto.NewsfeedItemWallpostDto>()
-//                    // TODO: Write Lock
-//                    displayPosts.addAll(
-//                        posts.map { it.toUIPost() }
-//                    )
-//
-//                    // TODO new startFrom
-//                }
-//
-//                override fun fail(error: Exception) {
-//                    Log.e("AppViewModel", "Failed to load posts: ${error.message}")
-//                }
-//            })
-//        }
-//    }
-
-//    private fun addPosts(posts: Collection<Post>) = uiStateLock.write {
-//
-//    }
-//
 }

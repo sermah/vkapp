@@ -4,13 +4,15 @@ import com.sermah.vkapp.ui.data.Post
 import com.sermah.vkapp.ui.data.UserProfile
 
 sealed interface UiState {
-    data object LoggedOut: UiState
+    data object LoggedOut : UiState
+
+    data object Friends : UiState
 
     data class Profile(
         val profile: UserProfile?,
         val posts: List<Post>,
         val offset: Int,
-    ): UiState
+    ) : UiState
 
     data class Feed(
         val posts: List<Post>,
@@ -22,5 +24,6 @@ sealed interface UiState {
             is LoggedOut -> "Login"
             is Profile -> profile?.screenName ?: "Profile"
             is Feed -> "Feed"
+            is Friends -> "Friends"
         }
 }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.sermah.vkapp.AppViewModel
+import com.sermah.vkapp.ui.screen.ScreenFriends
 import com.sermah.vkapp.ui.screen.ScreenLogin
 import com.sermah.vkapp.ui.screen.ScreenUserProfile
 import com.sermah.vkapp.ui.state.UiState
@@ -42,6 +43,15 @@ fun VKApp(viewModel: AppViewModel) = VKAppTheme {
 
             is UiState.Feed -> {
 
+            }
+
+            is UiState.Friends -> {
+                ScreenFriends(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    onVisitPerson = { name -> viewModel.visitProfile(name) },
+                )
             }
         }
     }

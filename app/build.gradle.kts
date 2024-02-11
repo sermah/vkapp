@@ -63,6 +63,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.2.0-rc01")
 
+    implementation("com.google.code.gson:gson:2.10.1")
+
     implementation("com.vk:android-sdk-core:4.1.0")
     implementation("com.vk:android-sdk-api:4.1.0")
 
